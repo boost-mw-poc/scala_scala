@@ -24,7 +24,6 @@ jobs:
           - source scripts/common
           - source scripts/bootstrap_fun
           - determineScalaVersion
-          - deriveModuleVersions
           - removeExistingBuilds $integrationRepoUrl
           - if [ ! -z "$STARR_REF" ]; then buildStarr; fi
           - buildLocker
