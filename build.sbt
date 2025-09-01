@@ -979,6 +979,7 @@ lazy val scala2: Project = (project in file("."))
   .settings(disablePublishing)
   .settings(generateBuildCharacterFileSettings)
   .settings(
+    name := "Scala 2.12", // project name in IntelliJ
     commands ++= ScriptCommands.all,
     extractBuildCharacterPropertiesFile := {
       val jar = (bootstrap / scalaInstance).value.allJars.find(_.getName contains "-compiler").get
