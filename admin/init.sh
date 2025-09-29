@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 sensitive() {
+  envsubst < files/credentials-private-repo-netrc > ~/.credentials-private-repo-netrc
   openssl aes-256-cbc -md md5 -d -pass "pass:$GPG_SUBKEY_SECRET" -in files/gpg_subkey.enc | gpg --import
 }
 
