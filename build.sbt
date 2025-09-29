@@ -56,11 +56,8 @@ val diffUtilsDep      = "com.googlecode.java-diff-utils" % "diffutils"       % "
   * real publishing should be done with sbt's standard `publish` task. */
 lazy val publishDists = taskKey[Unit]("Publish to ./dists/maven-sbt.")
 
-(Global / credentials) ++= {
-  val gpgKey = Credentials("GPG Key", "gpg", "1FA868A348719E88B6D0DE24C03EF1D7D692BCFF", "ignored")
-  val file = List(Path.userHome / ".credentials").filter(f => f.exists && !f.isDirectory).map(Credentials.apply)
-  gpgKey :: file
-}
+(Global / credentials) ++=
+  List(Path.userHome / ".credentials").filter(f => f.exists && !f.isDirectory).map(Credentials.apply)
 
 lazy val publishSettings : Seq[Setting[_]] = Seq(
   publishDists := {
