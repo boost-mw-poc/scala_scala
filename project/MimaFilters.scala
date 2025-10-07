@@ -13,7 +13,7 @@ object MimaFilters extends AutoPlugin {
   import autoImport._
 
   override val globalSettings = Seq(
-    mimaReferenceVersion := Some("2.13.16"),
+    mimaReferenceVersion := Some("2.13.17"),
   )
 
   val mimaFilters: Seq[ProblemFilter] = Seq[ProblemFilter](
@@ -43,44 +43,6 @@ object MimaFilters extends AutoPlugin {
     ProblemFilters.exclude[MissingClassProblem]("scala.collection.generic.CommonErrors"),
     ProblemFilters.exclude[MissingClassProblem]("scala.collection.generic.CommonErrors$"),
 
-    //scala/scala#10972
-    ProblemFilters.exclude[MissingClassProblem]("scala.concurrent.Await$FutureValue$"),
-
-    // scala/scala#10937
-    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.collection.immutable.LazyList#LazyBuilder#DeferredState.eval"),
-    ProblemFilters.exclude[MissingClassProblem](s"scala.collection.immutable.LazyList$$State"),
-    ProblemFilters.exclude[MissingClassProblem](s"scala.collection.immutable.LazyList$$State$$"),
-    ProblemFilters.exclude[MissingClassProblem](s"scala.collection.immutable.LazyList$$State$$Cons"),
-    ProblemFilters.exclude[MissingClassProblem](s"scala.collection.immutable.LazyList$$State$$Empty$$"),
-    ProblemFilters.exclude[MissingClassProblem]("scala.collection.immutable.LazyList$EmptyMarker$"),
-    ProblemFilters.exclude[IncompatibleResultTypeProblem]("scala.collection.immutable.LazyList#LazyBuilder#DeferredState.eval"),
-    ProblemFilters.exclude[MissingClassProblem]("scala.collection.immutable.LazyList$MidEvaluation$"),
-    ProblemFilters.exclude[MissingClassProblem]("scala.collection.immutable.LazyList$Uninitialized$"),
-
-    // scala/scala#11004
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.reflect.api.Annotations#AnnotationApi.argIsDefault"),
-    // A new abstract trait method is not binary compatible in principle, but `AnnotationApi` is only implemented by
-    // `AnnotationInfo`, both of which are in scala-reflect.jar. So this should never leak.
-    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.reflect.api.Annotations#AnnotationApi.argIsDefault"),
-
-    // scala/scala#10976
-    ProblemFilters.exclude[MissingClassProblem]("scala.annotation.meta.defaultArg"),
-    ProblemFilters.exclude[MissingClassProblem]("scala.annotation.meta.superArg"),
-    ProblemFilters.exclude[MissingClassProblem]("scala.annotation.meta.superFwdArg"),
-
-    ProblemFilters.exclude[MissingClassProblem]("scala.collection.IndexedSeqSlidingIterator"),
-    ProblemFilters.exclude[NewMixinForwarderProblem]("scala.collection.IndexedSeqOps.sliding"),
-    ProblemFilters.exclude[ReversedMissingMethodProblem]("scala.collection.mutable.ArrayDequeOps.scala$collection$mutable$ArrayDequeOps$$super$sliding"),
-
-    // new jdk 25 method in CharSequence => mixin forwarders
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.Predef#ArrayCharSequence.getChars"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.Predef#SeqCharSequence.getChars"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.collection.mutable.StringBuilder.getChars"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.runtime.ArrayCharSequence.getChars"),
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.runtime.SeqCharSequence.getChars"),
-
-    // scala/scala#11124
-    ProblemFilters.exclude[DirectMissingMethodProblem]("scala.reflect.runtime.JavaUniverse.knownFalseSubTypes"),
   )
 
   override val buildSettings = Seq(
