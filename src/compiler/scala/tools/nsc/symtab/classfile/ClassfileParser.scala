@@ -1454,13 +1454,17 @@ abstract class ClassfileParser(reader: ReusableInstance[ReusableDataReader]) {
 
   // Append annotation. For Java deprecation, prefer an annotation with values (since, etc).
   private def addUniqueAnnotation(symbol: Symbol, annot: AnnotationInfo): symbol.type = {
-    // skip jdk internal synthetic symbols
-    def skipAnnot = settings.release.isSetByUser && {
+    // Silently ignore missing annotation classes like javac and Scala 3
+    def skipAnnot =
       annot.symbol match {
-        case sym: StubSymbol => sym.name.startsWith("jdk.internal.") && sym.name.endsWith("+Annotation")
+        case sym: StubSymbol =>
+          if (settings.isDeveloper || (settings.debug.value && !sym.name.startsWith("jdk.internal."))) {
+            val msg = s"Error while parsing annotations in $file: annotation class ${sym.name} not present on classpath"
+            loaders.warning(NoPosition, msg, WarningCategory.OtherDebug, clazz.fullNameString)
+          }
+          true
         case _ => false
       }
-    }
     if (annot.symbol == JavaDeprecatedAttr) {
       def ensureDepr(sym: Symbol): sym.type = {
         if (sym.hasAnnotation(JavaDeprecatedAttr))
