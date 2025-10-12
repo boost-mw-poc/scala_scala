@@ -1453,13 +1453,20 @@ abstract class ClassfileParser(reader: ReusableInstance[ReusableDataReader]) {
     if (flags.isStatic) staticScope else instanceScope
 
   // Append annotation. For Java deprecation, prefer an annotation with values (since, etc).
-  private def addUniqueAnnotation(symbol: Symbol, annot: AnnotationInfo): symbol.type =
-    if (annot.atp.typeSymbol == JavaDeprecatedAttr) {
+  private def addUniqueAnnotation(symbol: Symbol, annot: AnnotationInfo): symbol.type = {
+    // skip jdk internal synthetic symbols
+    def skipAnnot = settings.release.isSetByUser && {
+      annot.symbol match {
+        case sym: StubSymbol => sym.name.startsWith("jdk.internal.") && sym.name.endsWith("+Annotation")
+        case _ => false
+      }
+    }
+    if (annot.symbol == JavaDeprecatedAttr) {
       def ensureDepr(sym: Symbol): sym.type = {
         if (sym.hasAnnotation(JavaDeprecatedAttr))
           if (List(0, 1).exists(annot.constantAtIndex(_).isDefined))
             sym.setAnnotations {
-              def drop(cur: AnnotationInfo): Boolean = cur.atp.typeSymbol == JavaDeprecatedAttr
+              def drop(cur: AnnotationInfo): Boolean = cur.symbol == JavaDeprecatedAttr
               sym.annotations.foldRight(annot :: Nil)((a, all) => if (drop(a)) all else a :: all)
             }
           else sym
@@ -1469,7 +1476,11 @@ abstract class ClassfileParser(reader: ReusableInstance[ReusableDataReader]) {
         ensureDepr(staticModule)
       ensureDepr(symbol)
     }
-    else symbol.addAnnotation(annot)
+    else if (skipAnnot)
+      symbol
+    else
+      symbol.addAnnotation(annot)
+  }
 }
 object ClassfileParser {
   private implicit class GoodTimes(private val n: Int) extends AnyVal {
