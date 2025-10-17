@@ -122,6 +122,9 @@ trait ScalaSettings extends StandardScalaSettings with Warnings { _: MutableSett
   val resident           = BooleanSetting      ("-Xresident", "Compiler stays resident: read source filenames from standard input.")
   val script             = StringSetting       ("-Xscript", "object", "Treat the source file as a script and wrap it in a main method.", "Main")
   val mainClass          = StringSetting       ("-Xmain-class", "path", "Class for manifest's Main-Class entry (only useful with -d <jar>)", "")
+    .withDeprecationMessage(
+      """the Scala compiler will stop emitting the Main-Class manifest entry, since it is only supported by the legacy `scala` runner.
+        |scala-cli disregards the entry, instead it finds main classes when running a jar.""".stripMargin)
   val sourceReader       = StringSetting       ("-Xsource-reader", "classname", "Specify a custom method for reading source files.", "")
   val reporter           = StringSetting       ("-Xreporter", "classname", "Specify a custom subclass of FilteringReporter for compiler messages.", "scala.tools.nsc.reporters.ConsoleReporter")
   private val XsourceHelp =
