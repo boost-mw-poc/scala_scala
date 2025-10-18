@@ -319,11 +319,14 @@ trait DocComments { self: Global =>
       val searchList = {
         var bases = List.empty[Symbol]
         def include(k: Symbol): Unit = bases ::= k
-        def examine(k: Symbol): Unit = {
+        def examine(k: Symbol): Unit = if (k.exists) {
           val bs = if (k.hasSelfType) k.typeOfThis.baseClasses else k.baseClasses
           bs.foreach(include)
         }
-        if (site.isModule) examine(site.companionClass)
+        if (site.isModule) {
+          include(site)
+          examine(site.companionClass)
+        }
         examine(site)
         bases.reverse.distinct
       }
