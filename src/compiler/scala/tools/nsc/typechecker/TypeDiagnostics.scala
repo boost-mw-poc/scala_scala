@@ -590,8 +590,20 @@ trait TypeDiagnostics extends splain.SplainDiagnostics {
 
     def descend(annot: AnnotationInfo): Unit =
       if (!annots(annot)) {
+        def traverseConstantArg(arg: ClassfileAnnotArg): Unit = arg match {
+          case arg: LiteralAnnotArg =>
+            arg.attachments.get[OriginalTreeAttachment] match {
+              case Some(OriginalTreeAttachment(original)) => traverse(original)
+              case _ =>
+            }
+          case ArrayAnnotArg(args) => args.foreach(traverseConstantArg)
+          case NestedAnnotArg(annInfo) => descend(annInfo)
+          case _ =>
+        }
         annots.addOne(annot)
         traverse(annot.original)
+        annot.args.foreach(traverse)
+        annot.assocs.foreach { case (_, arg) => traverseConstantArg(arg) }
       }
 
     override def traverse(t: Tree): Unit = {
@@ -659,6 +671,7 @@ trait TypeDiagnostics extends splain.SplainDiagnostics {
             case b @ Bind(n, _) if n != nme.DEFAULT_CASE => addPatVar(b)
             case _ =>
           }
+        case NamedArg(_, rhs) => traverse(rhs)
         case t: RefTree => handleRefTree(t)
         case Assign(lhs, _) if isExisting(lhs.symbol) => setVars += lhs.symbol
         case Function(ps, _) if !t.isErrorTyped =>

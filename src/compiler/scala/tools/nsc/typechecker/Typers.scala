@@ -4019,7 +4019,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
     def typedAnnotation(ann: Tree, annotee: Option[Tree], mode: Mode = EXPRmode): AnnotationInfo = {
       var hasError: Boolean = false
       var unmappable: Boolean = false
-      val pending = ListBuffer[AbsTypeError]()
+      val pending = ListBuffer.empty[AbsTypeError]
       def ErroneousAnnotation = new ErroneousAnnotation().setOriginal(ann)
 
       def rangeFinder(): (Int, Int) =
@@ -4134,9 +4134,15 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
           if (unit.isJava) unmappable = true
           else if (!isDefaultArg(ttree)) reportAnnotationError(AnnotationNotAConstantError(ttree))
           None
-        } else if (const.value == null) {
-          reportAnnotationError(AnnotationArgNullError(tr)); None
-        } else
+        }
+        else if (const.value == null) {
+          reportAnnotationError(AnnotationArgNullError(tr))
+          None
+        }
+        else if (isJava)
+          // for Wunused; not needed for Scala ConstantAnnotation, there we have a valid `annotationInfo.original`
+          Some(LiteralAnnotArg(const).updateAttachment(OriginalTreeAttachment(ttree)))
+        else
           Some(LiteralAnnotArg(const))
       }
 
@@ -4200,25 +4206,29 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
           .map(args => ArrayAnnotArg(args.toArray))
       }
 
-      @inline def constantly = {
-        // Arguments of Java annotations and ConstantAnnotations are checked to be constants and
-        // stored in the `assocs` field of the resulting AnnotationInfo
+      // Arguments of Java annotations and ConstantAnnotations are checked to be constants and
+      // stored in the `assocs` field of the resulting AnnotationInfo
+      def constantly =
         if (argss.lengthIs > 1) {
           reportAnnotationError(MultipleArgumentListForAnnotationError(ann))
         } else {
           val annScopeJava = annType.decls.filter(sym => sym.isMethod && !sym.isConstructor && sym.isJavaDefined)
 
-          val names = mutable.Set[Symbol]()
+          val names = mutable.Set.empty[Symbol]
           names ++= annScopeJava.iterator
 
-          def hasValue = names exists (_.name == nme.value)
+          def hasValue = names.exists(_.name == nme.value)
           val namedArgs = argss match {
-            case List(List(arg)) if !isNamedArg(arg) && hasValue => gen.mkNamedArg(nme.value, arg) :: Nil
-            case List(args)                                      => args
-            case x                                               => throw new MatchError(x)
+            case args :: Nil =>
+              args match {
+                case arg :: Nil if !isNamedArg(arg) && hasValue => gen.mkNamedArg(nme.value, arg) :: Nil
+                case args => args
+              }
+            case x => throw new MatchError(x)
           }
 
-          val nvPairs = namedArgs map {
+          // name, optional value
+          val nvPairs = namedArgs.map {
             case arg @ NamedArg(Ident(name), rhs) =>
               val sym = annScopeJava.lookup(name)
               if (sym == NoSymbol) {
@@ -4230,7 +4240,8 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
               } else {
                 names -= sym
                 sym.cookJavaRawInfo() // #3429
-                val annArg = tree2ConstArg(rhs, sym.tpe.resultType)
+                val pt = sym.tpe.resultType
+                val annArg = tree2ConstArg(rhs, pt)
                 (sym.name, annArg)
               }
             case arg =>
@@ -4249,11 +4260,13 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
           else {
             if (annTypeSym == JavaDeprecatedAttr && !context.unit.isJava && settings.lintDeprecation)
               context.warning(ann.pos, """Prefer the Scala annotation over Java's `@Deprecated` to provide a message and version: @deprecated("message", since = "MyLib 1.0")""", WarningCategory.LintDeprecation)
-            AnnotationInfo(annType, Nil, nvPairs.map(p => (p._1, p._2.get))).setOriginal(Apply(typedFun, namedArgs).setPos(ann.pos))
+            AnnotationInfo(annType, Nil, nvPairs.map(p => (p._1, p._2.get)))
+              .setOriginal(Apply(typedFun, namedArgs).setPos(ann.pos))
           }
         }
-      }
-      @inline def statically = {
+      // end constantly
+
+      def statically = {
         val typedAnn: Tree = {
           // local dummy fixes scala/bug#5544
           val localTyper = newTyper(context.make(ann, context.owner.newLocalDummy(ann.pos)))
@@ -4298,6 +4311,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
           info
         }
       }
+      // end statically
 
       finish {
         if (isJava)

@@ -75,7 +75,7 @@ trait AnnotationInfos extends api.Annotations { self: SymbolTable =>
    *  - arrays of constants
    *  - or nested classfile annotations (only for Java annotation)
    *
-   * TODO: rename to `ConstantAnnotationArg`
+   * aka `ConstantAnnotationArg`
    */
   @nowarn("""cat=deprecation&origin=scala\.reflect\.api\.Annotations\.JavaArgumentApi""")
   sealed abstract class ClassfileAnnotArg extends Product with JavaArgumentApi
@@ -87,7 +87,7 @@ trait AnnotationInfos extends api.Annotations { self: SymbolTable =>
    *  `Char`, `Int`, `Long`, `Float`, `Double`, `String`, `java.lang.Class` or
    *  an instance of a Java enumeration value).
    */
-  case class LiteralAnnotArg(const: Constant) extends ClassfileAnnotArg {
+  case class LiteralAnnotArg(const: Constant) extends ClassfileAnnotArg with Attachable {
     override def toString = const.escapedStringValue
   }
 
@@ -189,7 +189,7 @@ trait AnnotationInfos extends api.Annotations { self: SymbolTable =>
    * If `atp` conforms to `ConstantAnnotation` (which is true for annotations defined in Java), the annotation
    * arguments are compile-time constants represented in `assocs`. Note that default arguments are *not* present
    * in `assocs`. The `assocsWithDefaults` extends `assocs` with the default values from the annotation definition.
-   * Example: `class a(x: Int = 1) extends ConstantAnnotation`.F or `@ann()` without arguments `assocsWithDefaults`
+   * Example: `class a(x: Int = 1) extends ConstantAnnotation`. For `@ann()` without arguments `assocsWithDefaults`
    * contains `x -> 1`.
    *
    * If `atp` is not a `ConstantAnnotation`, the annotation arguments are represented as type trees in `args`.
