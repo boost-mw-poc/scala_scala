@@ -1,13 +1,14 @@
 #!/bin/bash -e
 
-if [ -z "$GPG_SUBKEY_SECRET" ]; then
-  echo "GPG_SUBKEY_SECRET is missing/empty, so skipping credentials & gpg setup"
+if [ -z "$GPG_ENC_PASS" ]; then
+  echo "GPG_ENC_PASS is missing/empty, so skipping credentials & gpg setup"
   exit
 fi
 
 sensitive() {
   envsubst < files/credentials-private-repo-netrc > ~/.credentials-private-repo-netrc
-  openssl aes-256-cbc -md md5 -d -pass "pass:$GPG_SUBKEY_SECRET" -in files/gpg_subkey.enc | gpg --import
+  openssl enc -d -aes-256-cbc -salt -pbkdf2 -pass "pass:$GPG_ENC_PASS" -in files/scala-key.asc.enc | \
+    gpg --batch --yes --import --pinentry-mode loopback --passphrase "$PGP_PASSPHRASE"
 }
 
 # don't let anything escape from the sensitive part (e.g. leak environment var by echoing to log on failure)
