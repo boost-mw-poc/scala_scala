@@ -5484,7 +5484,7 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
             wrapErrors(t, _.typed1(t, mode, pt))
           }
           def checkDubiousUnitSelection(result: Tree): Unit =
-            if (!isPastTyper && isUniversalMember(result.symbol))
+            if (!isPastTyper && isUniversalMember(result.symbol) && result.pos.isRange)
               context.warning(tree.pos, s"dubious usage of ${result.symbol} with unit value", WarningCategory.LintUniversalMethods)
 
           val sym = tree.symbol
