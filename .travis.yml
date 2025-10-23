@@ -1,5 +1,4 @@
 version: ~> 1.0 # needed for imports
-
 import: scala/scala-dev:travis/default.yml
 
 dist: noble
@@ -9,43 +8,43 @@ stages:
   - name: build
 
 jobs:
-    include:
+  include:
+    - stage: build
+      if: type != pull_request AND repo = scala/scala AND branch = 2.12.x
+      name: publish (bootstrapped) to scala-integration or sonatype
+      script:
+        # see comment in `bootstrap_fun` for details on the procedure
+        # env available in each stage
+        #  - by travis config (see below): secret env vars
+        #  - by `common` script: WORKSPACE, IVY2_DIR, SBT_CMD, integrationRepoUrl
+        #  - by `bootstrap_fun`: publishPrivateTask, ...
+        - set -e
+        - (cd admin && ./init.sh)
+        - source scripts/common
+        - source scripts/bootstrap_fun
+        - determineScalaVersion
+        - removeExistingBuilds $integrationRepoUrl
+        - if [ ! -z "$STARR_REF" ]; then buildStarr; fi
+        - buildLocker
+        - buildQuick
+        - triggerScalaDist
 
-      # full bootstrap and publish
-      - stage: build
-        if: type != pull_request
-        script:
-          # see comment in `bootstrap_fun` for details on the procedure
-          # env available in each stage
-          #  - by travis config (see below): secret env vars
-          #  - by `common` script: WORKSPACE, IVY2_DIR, SBT_CMD, integrationRepoUrl
-          #  - by `bootstrap_fun`: publishPrivateTask, ...
-          - (cd admin && ./init.sh)
-          - source scripts/common
-          - source scripts/bootstrap_fun
-          - determineScalaVersion
-          - removeExistingBuilds $integrationRepoUrl
-          - if [ ! -z "$STARR_REF" ]; then buildStarr; fi
-          - buildLocker
-          - buildQuick
-          - triggerScalaDist
-
-      # build the spec using jekyll
-      - stage: build
-        if: type != pull_request
-        dist: focal
-        language: ruby
-        # ruby 3.x is default, need to upgrade jekyll. using 2.7 for now.
-        rvm: 2.7
-        install:
-          - ruby -v
-          - gem install bundler -v "< 2.5" #scala-dev#857
-          - bundler --version
-          - bundle install
-        script:
-        - '(cd admin && ./init.sh)'
+    - stage: build
+      if: type != pull_request AND repo = scala/scala AND branch = 2.12.x
+      name: language spec
+      dist: focal
+      language: ruby
+      rvm: 2.7
+      install:
+        - ruby -v
+        - gem install bundler -v "< 2.5" #scala-dev#857
+        - bundler --version
+        - bundle install
+      script:
+        - set -e
+        - (cd admin && ./init.sh)
         - bundle exec jekyll build -s spec/ -d build/spec
-        after_success:
+      after_success:
         - ./scripts/travis-publish-spec.sh
 
 env:
