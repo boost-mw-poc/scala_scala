@@ -516,6 +516,8 @@ trait TypeDiagnostics extends splain.SplainDiagnostics {
 
     def recordReference(sym: Symbol): Unit = targets.addOne(sym)
 
+    def recordType(tp: Type): Unit = treeTypes.addOne(tp)
+
     def checkNowarn(tree: Tree): Unit =
       tree match {
         case tree: Bind =>
@@ -553,12 +555,27 @@ trait TypeDiagnostics extends splain.SplainDiagnostics {
 
     def handleRefTree(t: RefTree): Unit = {
       val sym = t.symbol
-      if (isExisting(sym) && !currentOwner.hasTransOwner(sym) && !t.hasAttachment[ForAttachment.type])
+      if (isExisting(sym) && !isCurrentlyEnclosedBy(sym) && !t.hasAttachment[ForAttachment.type])
         recordReference(sym)
     }
 
+    // sym is an owner or an owner is a synthetic case method owned by sym's companion module
+    // note: isConstructor avoids only super.<init> at typer
+    def isCurrentlyEnclosedBy(sym: Symbol): Boolean =
+      currentOwner.hasTransOwner(sym) || sym.isCaseClass && {
+        val module = sym.companionModule.moduleClass
+        def enclosed =
+          currentOwner.ownersIterator
+            .takeWhile(!_.isClass)
+            .exists(owner =>
+                 owner.owner == module
+              && (owner.isCase && owner.isSynthetic || owner.isConstructor)
+            )
+        currentOwner == module || enclosed
+      }
+
     def handleTreeType(t: Tree): Unit =
-      if ((t.tpe ne null) && t.tpe != NoType) {
+      if ((t.tpe ne null) && t.tpe != NoType /*&& !treeInfo.isSuperConstrCall(t)*/) { // see isCurrentlyEnclosedBy
         for (tp <- t.tpe if tp != NoType && !treeTypes(tp)) {
           // Include references to private/local aliases (which might otherwise refer to an enclosing class)
           val isAlias = {
@@ -566,17 +583,17 @@ trait TypeDiagnostics extends splain.SplainDiagnostics {
             td.isAliasType && (td.isLocalToBlock || td.isPrivate)
           }
           // Ignore type references to an enclosing class. A reference to C must be outside C to avoid warning.
-          if (isAlias || !currentOwner.hasTransOwner(tp.typeSymbol)) tp match {
+          if (isAlias || !isCurrentlyEnclosedBy(tp.typeSymbol)) tp match {
             case NoType | NoPrefix    =>
             case NullaryMethodType(_) =>
             case MethodType(_, _)     =>
             case SingleType(_, _)     =>
             case ConstantType(Constant(k: Type)) =>
               log(s"classOf $k referenced from $currentOwner")
-              treeTypes += k
+              recordType(k)
             case _                    =>
               log(s"${if (isAlias) "alias " else ""}$tp referenced from $currentOwner")
-              treeTypes += tp
+              recordType(tp)
           }
           for (annot <- tp.annotations)
             descend(annot)
@@ -715,7 +732,7 @@ trait TypeDiagnostics extends splain.SplainDiagnostics {
         && !isSuppressed(m)
         && !m.isTypeParameterOrSkolem // would be nice to improve this
         && (m.isPrivate || m.isLocalToBlock || isEffectivelyPrivate(m))
-        && !treeTypes.exists(_.exists(_.typeSymbolDirect == m))
+        && !treeTypes.exists(_.typeSymbolDirect == m)
       )
     def isSyntheticWarnable(sym: Symbol) = {
       def privateSyntheticDefault: Boolean =
