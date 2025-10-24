@@ -10,10 +10,6 @@ else
   IVY2_DIR="$WORKSPACE/.ivy2"
 fi
 
-# used by `sbtResolve`
-rm -rf "$WORKSPACE/resolutionScratch_"
-mkdir -p "$WORKSPACE/resolutionScratch_"
-
 SBT_VERSION=`grep sbt.version $WORKSPACE/project/build.properties | sed -n 's/sbt.version=\(.*\)/\1/p'`
 
 SBT_CMD=${SBT_CMD-sbt}
@@ -37,10 +33,6 @@ mkdir "${BOOTSTRAP_REPO_DIR}"
 
 addIntegrationResolver="set resolvers in Global += \"scala-pr\" at \"$integrationRepoUrl\""
 addBootstrapResolver="set resolvers in Global += \"scala-bootstrap\" at \"file://$BOOTSTRAP_REPO_DIR\""
-# Gets set to addIntegrationResolver or addBootstrapResolver for use in sbtBuild and sbtResolve:
-addResolvers=""
-
-stApi="https://oss.sonatype.org/service/local"
 
 # General debug logging
 # $* - message
@@ -140,66 +132,11 @@ update() {
   git reset --hard
 }
 
-##### sonatype interface
-
-st_curl(){
-  curl -H "Content-Type: application/json" -H "accept: application/json,application/vnd.siesta-error-v1+json,application/vnd.siesta-validation-errors-v1+json"  -K ~/.sonatype-curl -s -o - $@
-}
-
-st_stagingRepos() {
- st_curl "$stApi/staging/profile_repositories" | jq '.data[] | select(.profileName == "org.scala-lang")'
-}
-
-st_stagingReposOpen() {
- st_stagingRepos | jq 'select(.type == "open")'
-}
-
-st_stagingRepoStatus() {
-  st_stagingRepos | jq -r "select(.repositoryId == \"$1\") | .type"
-}
-
-st_stagingRepoDrop() {
-  repo=$1
-  message=$2
-  echo "{\"data\":{\"description\":\"$message\",\"stagedRepositoryIds\":[\"$repo\"]}}" | st_curl -X POST -d @- "$stApi/staging/bulk/drop"
-}
-
-st_stagingRepoClose() {
-  repo=$1
-  message=$2
-  echo "{\"data\":{\"description\":\"$message\",\"stagedRepositoryIds\":[\"$repo\"]}}" | st_curl -X POST -d @- "$stApi/staging/bulk/close"
-}
-
 #### sbt tools
-
-sbtBuild() {
-  travis_fold_start build "Building $(basename $PWD) with $@"
-  $SBT_CMD -no-colors $sbtArgs "$addResolvers" "${scalaVersionTasks[@]}" "${publishTasks[@]}" "$@"
-  travis_fold_end build
-}
-
-sbtResolve() {
-  cd "$WORKSPACE/resolutionScratch_"
-  touch build.sbt
-  # Can be set to `full` if a module requires cross-versioning against the full Scala version, like the continuations plugin used to.
-  cross=${4-binary}
-  # echo "### sbtResolve: $SBT_CMD -no-colors $sbtArgs " "${scalaVersionTasks[@]}" "\"$1\" % \"$2\" % \"$3\" cross CrossVersion.$cross"
-  travis_fold_start resolve "Resolving \"$1\" % \"$2\" % \"$3\" cross CrossVersion.$cross"
-  $SBT_CMD -no-colors $sbtArgs "${scalaVersionTasks[@]}" \
-    "$addResolvers" \
-    "set libraryDependencies := Seq(\"$1\" % \"$2\" % \"$3\" cross CrossVersion.$cross)" \
-    "show update"
-  res=$?
-  cd $WORKSPACE
-  travis_fold_end resolve
-  return $res
-}
 
 clearIvyCache() {
   travis_fold_start clearIvy "Clearing ivy cache"
   rm -fv $IVY2_DIR/exclude_classifiers $IVY2_DIR/exclude_classifiers.lock
-  rm -rfv $IVY2_DIR/cache/org.scala-lang $IVY2_DIR/cache/org.scala-lang.modules
-  rm -rfv $IVY2_DIR/local/org.scala-lang $IVY2_DIR/local/org.scala-lang.modules
   if [ -d $IVY2_DIR ]; then find $IVY2_DIR -name "*compiler-interface*$SCALA_VER*" | xargs rm -rfv; fi
   if [ -d $HOME/.sbt ]; then find $HOME/.sbt -name "*compiler-interface*$SCALA_VER*" | xargs rm -rfv; fi
   travis_fold_end clearIvy
@@ -208,19 +145,23 @@ clearIvyCache() {
 #### travis
 
 triggerScalaDist() {
-  local jsonTemplate='{ "request": { "branch": "%s", "message": "Scala Dist %s", "config": { "before_install": "export version=%s mode=release scala_sha=%s" } } }'
-  local json=$(printf "$jsonTemplate" "$TRAVIS_BRANCH" "$SCALA_VER" "$SCALA_VER" "$TRAVIS_COMMIT")
+  if [ "$publishToSonatype" = "yes" ]; then
+    echo "Not triggering scala-dist: after sonatype migration to central repository, staged (but unreleased) builds are not available through any resolver."
+  else
+    local jsonTemplate='{ "request": { "branch": "%s", "message": "Scala Dist %s", "config": { "before_install": "export version=%s mode=release scala_sha=%s" } } }'
+    local json=$(printf "$jsonTemplate" "$TRAVIS_BRANCH" "$SCALA_VER" "$SCALA_VER" "$TRAVIS_COMMIT")
 
-  local curlStatus=$(curl \
-    -s -o /dev/null -w "%{http_code}" \
-    -H "Travis-API-Version: 3" \
-    -H "Authorization: token $TRAVIS_TOKEN" \
-    -H "Content-Type: application/json" \
-    -d "$json" \
-    https://api.travis-ci.com/repo/scala%2Fscala-dist/requests)
+    local curlStatus=$(curl \
+      -s -o /dev/null -w "%{http_code}" \
+      -H "Travis-API-Version: 3" \
+      -H "Authorization: token $TRAVIS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d "$json" \
+      https://api.travis-ci.com/repo/scala%2Fscala-dist/requests)
 
-  [[ "$curlStatus" == "202" ]] || {
-    echo "failed to start job"
-    exit 1
-  }
+    [[ "$curlStatus" == "202" ]] || {
+      echo "failed to start job"
+      exit 1
+    }
+  fi
 }

@@ -57,9 +57,9 @@ val diffUtilsDep      = "com.googlecode.java-diff-utils" % "diffutils"       % "
 lazy val publishDists = taskKey[Unit]("Publish to ./dists/maven-sbt.")
 
 (Global / credentials) ++= {
-  val file = Path.userHome / ".credentials"
-  if (file.exists && !file.isDirectory) List(Credentials(file))
-  else Nil
+  val gpgKey = Credentials("GPG Key", "gpg", "2A5E8B338438CAC7033F9D8FB8A045C0A6EC398E", "ignored")
+  val file = List(Path.userHome / ".credentials").filter(f => f.exists && !f.isDirectory).map(Credentials.apply)
+  gpgKey :: file
 }
 
 lazy val publishSettings : Seq[Setting[_]] = Seq(
@@ -979,6 +979,7 @@ lazy val scala2: Project = (project in file("."))
   .settings(disablePublishing)
   .settings(generateBuildCharacterFileSettings)
   .settings(
+    name := "Scala 2.12", // project name in IntelliJ
     commands ++= ScriptCommands.all,
     extractBuildCharacterPropertiesFile := {
       val jar = (bootstrap / scalaInstance).value.allJars.find(_.getName contains "-compiler").get
