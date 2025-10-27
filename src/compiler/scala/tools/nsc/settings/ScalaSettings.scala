@@ -148,7 +148,6 @@ trait ScalaSettings extends StandardScalaSettings with Warnings { _: MutableSett
          |  * import p.*
          |  * import p.m as n
          |  * import p.{given, *}
-         |  * Eta-expansion `x.m` of methods without trailing `_`
          |
          |The following constructs emit a migration warning under -Xsource:3. To adopt
          |Scala 3 semantics, see `-Xsource-features:help`.
