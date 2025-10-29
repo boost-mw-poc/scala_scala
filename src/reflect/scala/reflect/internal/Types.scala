@@ -2930,7 +2930,7 @@ trait Types
 
   object MethodType extends MethodTypeExtractor
 
-  /** A method without parameter lists.
+  /** A method without parameter lists, i.e., parameterless or parameterlistless.
    *
    *  Note: a MethodType with paramss that is a ListOfNil is called "nilary", to disambiguate.
    */

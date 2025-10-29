@@ -89,6 +89,12 @@ trait Matchers {
 }
 object InnocentTest extends Matchers
 
+trait T2 {
+  @deprecated("old api", since="2.0")
+  def foo = 0
+}
+object Evolved extends Base with T2 // no warn deprecated alternative, compare Mixed above
+
 object Test extends App {
   implicit val t: T = new T {}
   val d1 = new Derived1 {} // no warn innocent client, already warned in evil parent
