@@ -1171,12 +1171,12 @@ trait IterableOnceOps[+A, +CC[_], +C] extends Any { this: IterableOnce[A] =>
    *
    *  $willNotTerminateInf
    *
-   *  @param    cmp   An ordering to be used for comparing elements.
+   *  @param    ord   An ordering to be used for comparing elements.
    *  @tparam   B     The result type of the function `f`.
    *  @param    f     The measuring function.
    *  @throws   UnsupportedOperationException if this $coll is empty.
    *  @return   the first element of this $coll with the largest value measured by function `f`
-   *            with respect to the ordering `cmp`.
+   *            with respect to the ordering `ord`.
    */
   def maxBy[B](f: A => B)(implicit ord: Ordering[B]): A =
     knownSize match {
@@ -1211,11 +1211,11 @@ trait IterableOnceOps[+A, +CC[_], +C] extends Any { this: IterableOnce[A] =>
    *
    *  $willNotTerminateInf
    *
-   *  @param    cmp   An ordering to be used for comparing elements.
+   *  @param    ord   An ordering to be used for comparing elements.
    *  @tparam   B     The result type of the function `f`.
    *  @param    f     The measuring function.
    *  @return   an option value containing the first element of this $coll with the
-   *            largest value measured by function `f` with respect to the ordering `cmp`.
+   *            largest value measured by function `f` with respect to the ordering `ord`.
    */
   def maxByOption[B](f: A => B)(implicit ord: Ordering[B]): Option[A] =
     knownSize match {
@@ -1227,12 +1227,12 @@ trait IterableOnceOps[+A, +CC[_], +C] extends Any { this: IterableOnce[A] =>
    *
    *  $willNotTerminateInf
    *
-   *  @param    cmp   An ordering to be used for comparing elements.
+   *  @param    ord   An ordering to be used for comparing elements.
    *  @tparam   B     The result type of the function `f`.
    *  @param    f     The measuring function.
    *  @throws   UnsupportedOperationException if this $coll is empty.
    *  @return   the first element of this $coll with the smallest value measured by function `f`
-   *            with respect to the ordering `cmp`.
+   *            with respect to the ordering `ord`.
    */
   def minBy[B](f: A => B)(implicit ord: Ordering[B]): A =
     knownSize match {
@@ -1244,12 +1244,12 @@ trait IterableOnceOps[+A, +CC[_], +C] extends Any { this: IterableOnce[A] =>
    *
    *  $willNotTerminateInf
    *
-   *  @param    cmp   An ordering to be used for comparing elements.
+   *  @param    ord   An ordering to be used for comparing elements.
    *  @tparam   B     The result type of the function `f`.
    *  @param    f     The measuring function.
    *  @return   an option value containing the first element of this $coll
    *            with the smallest value measured by function `f`
-   *            with respect to the ordering `cmp`.
+   *            with respect to the ordering `ord`.
    */
   def minByOption[B](f: A => B)(implicit ord: Ordering[B]): Option[A] =
     knownSize match {
