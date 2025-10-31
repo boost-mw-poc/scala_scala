@@ -507,7 +507,7 @@ trait JavaUniverseForce { self: runtime.JavaUniverse  =>
     definitions.InheritedAttr
     definitions.JUnitAnnotations
     definitions.languageFeatureModule
-    definitions.metaAnnotations
+    definitions.targetAnnotations
     definitions.AnnotationDefaultAttr
     definitions.isPhantomClass
     definitions.syntheticCoreClasses
