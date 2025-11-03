@@ -39,6 +39,8 @@ object MimaFilters extends AutoPlugin {
     ProblemFilters.exclude[DirectMissingMethodProblem]("scala.runtime.ArrayCharSequence.getChars"),
     ProblemFilters.exclude[DirectMissingMethodProblem]("scala.runtime.SeqCharSequence.getChars"),
 
+    // scala/scala#11175
+    ProblemFilters.exclude[MissingClassProblem]("scala.annotation.unchecked.uncheckedOverride"),
   )
 
   override val buildSettings = Seq(

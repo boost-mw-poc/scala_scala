@@ -323,6 +323,8 @@ abstract class RefChecks extends Transform {
          else "")
       }
 
+      def isMarkedOverride(sym: Symbol) = sym.isAnyOverride || sym.hasAnnotation(definitions.uncheckedOverrideClass)
+
       /* Check that all conditions for overriding `other` by `member`
        * of class `clazz` are met.
        */
@@ -433,7 +435,7 @@ abstract class RefChecks extends Transform {
             overrideError("cannot be used here - classes can only override abstract types")
           } else if (other.isEffectivelyFinal) { // (1.2)
             overrideError("cannot override final member")
-          } else if (!other.isDeferred && !member.isAnyOverride && !member.isSynthetic) { // (*)
+          } else if (!other.isDeferred && !isMarkedOverride(member) && !member.isSynthetic) { // (*)
             // (*) Synthetic exclusion for (at least) default getters, fixes scala/bug#5178. We cannot assign the OVERRIDE flag to
             // the default getter: one default getter might sometimes override, sometimes not. Example in comment on ticket.
               if (isNeitherInClass && !(other.owner isSubClass member.owner))
@@ -447,7 +449,7 @@ abstract class RefChecks extends Transform {
           } else if (other.isAbstractOverride && other.isIncompleteIn(clazz) && !member.isAbstractOverride) {
             overrideError("needs `abstract override' modifiers")
           }
-          else if (member.isAnyOverride && (other hasFlag ACCESSOR) && !(other hasFlag STABLE | DEFERRED)) {
+          else if (isMarkedOverride(member) && (other hasFlag ACCESSOR) && !(other hasFlag STABLE | DEFERRED)) {
             // The check above used to look at `field` == `other.accessed`, ensuring field.isVariable && !field.isLazy,
             // which I think is identical to the more direct `!(other hasFlag STABLE)` (given that `other` is a method).
             // Also, we're moving away from (looking at) underlying fields (vals in traits no longer have them, to begin with)
@@ -455,7 +457,7 @@ abstract class RefChecks extends Transform {
             if (!settings.overrideVars)
               overrideError("cannot override a mutable variable")
           }
-          else if (member.isAnyOverride &&
+          else if (isMarkedOverride(member) &&
                      !(member.owner.thisType.baseClasses exists (_ isSubClass other.owner)) &&
                      !member.isDeferred && !other.isDeferred &&
                      intersectionIsEmpty(member.extendedOverriddenSymbols, other.extendedOverriddenSymbols)) {
