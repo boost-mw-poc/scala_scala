@@ -202,7 +202,7 @@ abstract class RefChecks extends Transform {
       val byName =
         clazz.info.members
           .reverseIterator
-          .filter(m => ofInterest(m.info))
+          .filter(m => !m.isDeprecated && ofInterest(m.info))
           .toList
           .groupBy(_.name.dropLocal)
       def isCompetitive(syms: List[Symbol], sawNlly: Boolean, sawNonNlly: Boolean): Boolean =
