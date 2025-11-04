@@ -1387,11 +1387,20 @@ trait Definitions extends api.StandardDefinitions {
     lazy val languageFeatureModule      = getRequiredModule("scala.languageFeature")
 
     @tailrec
-    final def isMetaAnnotation(sym: Symbol): Boolean = metaAnnotations(sym) || (
+    final def isTargetAnnotation(sym: Symbol): Boolean = targetAnnotations(sym) || (
       // Trying to allow for deprecated locations
-      sym.isAliasType && isMetaAnnotation(sym.info.typeSymbol)
+      sym.isAliasType && isTargetAnnotation(sym.info.typeSymbol)
     )
-    lazy val metaAnnotations: Set[Symbol] = getPackage("scala.annotation.meta").info.members.filter(_ isSubClass StaticAnnotationClass).toSet
+    lazy val targetAnnotations: Set[Symbol] = Set(
+      BeanGetterTargetClass,
+      BeanSetterTargetClass,
+      FieldTargetClass,
+      GetterTargetClass,
+      ParamTargetClass,
+      SetterTargetClass,
+      ObjectTargetClass,
+      ClassTargetClass,
+      MethodTargetClass)
 
     // According to the scala.annotation.meta package object:
     // * By default, annotations on (`val`-, `var`- or plain) constructor parameters
