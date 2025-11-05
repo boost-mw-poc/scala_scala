@@ -15,6 +15,7 @@ package math
 
 import java.util.Comparator
 
+import scala.annotation.unchecked.uncheckedOverride
 import scala.language.implicitConversions
 import scala.annotation.migration
 
@@ -103,10 +104,10 @@ trait Ordering[T] extends Comparator[T] with PartialOrdering[T] with Serializabl
   override def equiv(x: T, y: T): Boolean = compare(x, y) == 0
 
   /** Return `x` if `x` >= `y`, otherwise `y`. */
-  def max[U <: T](x: U, y: U): U = if (gteq(x, y)) x else y
+  @uncheckedOverride def max[U <: T](x: U, y: U): U = if (gteq(x, y)) x else y
 
   /** Return `x` if `x` <= `y`, otherwise `y`. */
-  def min[U <: T](x: U, y: U): U = if (lteq(x, y)) x else y
+  @uncheckedOverride def min[U <: T](x: U, y: U): U = if (lteq(x, y)) x else y
 
   /** Return the opposite ordering of this one.
     *
