@@ -500,8 +500,9 @@ abstract class RefChecks extends Transform {
           else if (other.isEffectivelyFinal) // (1.2)
             overrideErrorWithMemberInfo("cannot override final member:")
           else {
-            // In Java, the OVERRIDE flag is implied
-            val memberOverrides = member.isAnyOverride || (member.isJavaDefined && !member.isDeferred)
+            val memberOverrides = member.isAnyOverride ||
+              member.hasAnnotation(definitions.uncheckedOverrideClass) ||
+              (member.isJavaDefined && !member.isDeferred) // In Java, the OVERRIDE flag is implied
 
             // Concrete `other` requires `override` for `member`.
             // Synthetic exclusion for (at least) default getters, fixes scala/bug#5178.

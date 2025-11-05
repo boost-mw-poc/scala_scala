@@ -461,6 +461,7 @@ trait JavaUniverseForce { self: runtime.JavaUniverse  =>
     definitions.NowarnClass
     definitions.uncheckedStableClass
     definitions.uncheckedVarianceClass
+    definitions.uncheckedOverrideClass
     definitions.ChildAnnotationClass
     definitions.RepeatedAnnotationClass
     definitions.TargetNameAnnotationClass
