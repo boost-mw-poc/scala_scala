@@ -1193,6 +1193,7 @@ trait Definitions extends api.StandardDefinitions {
     lazy val NowarnClass                = getClassIfDefined("scala.annotation.nowarn")
     lazy val uncheckedStableClass       = requiredClass[scala.annotation.unchecked.uncheckedStable]
     lazy val uncheckedVarianceClass     = requiredClass[scala.annotation.unchecked.uncheckedVariance]
+    lazy val uncheckedOverrideClass     = getClassIfDefined("scala.annotation.unchecked.uncheckedOverride")
 
     lazy val BeanPropertyAttr           = requiredClass[scala.beans.BeanProperty]
     lazy val BooleanBeanPropertyAttr    = requiredClass[scala.beans.BooleanBeanProperty]

@@ -422,6 +422,7 @@ trait JavaUniverseForce { self: runtime.JavaUniverse  =>
     definitions.NowarnClass
     definitions.uncheckedStableClass
     definitions.uncheckedVarianceClass
+    definitions.uncheckedOverrideClass
     definitions.BeanPropertyAttr
     definitions.BooleanBeanPropertyAttr
     definitions.CompileTimeOnlyAttr
