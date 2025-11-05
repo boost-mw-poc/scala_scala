@@ -275,7 +275,7 @@ trait IndexedBuffer[A] extends IndexedSeq[A]
 
   /** Replace the contents of this $coll with the filtered result.
    *
-   *  @param f the filtering function
+   *  @param p the filtering function
    *  @return this $coll
    */
   def filterInPlace(p: A => Boolean): this.type = {
