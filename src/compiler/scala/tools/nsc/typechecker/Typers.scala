@@ -3782,7 +3782,8 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
             } else if (lencmp > 0) {
               tryTupleApply orElse duplErrorTree {
                 val (argsNoNames, argPos) = removeNames(Typer.this)(args, params)
-                argsNoNames.foreach(typed(_, mode, ErrorType)) // typecheck args
+                // typecheck args to get better / helpful messages (scala/scala#11036), but not synthetic ones (scala/bug#13141)
+                argsNoNames.foreach(arg => if (arg.pos.isRange) typed(arg, mode, ErrorType))
                 TooManyArgsNamesDefaultsError(tree, fun, formals, args, argPos)
               }
             } else if (lencmp == 0) {
@@ -3873,7 +3874,8 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
                     }
 
                     val (argsNoNames, _) = removeNames(Typer.this)(allArgs, params) // report bad names
-                    argsNoNames.foreach(typed(_, mode, ErrorType)) // typecheck args
+                    // typecheck args to get better / helpful messages (scala/scala#11036), but not synthetic ones (scala/bug#13141)
+                    argsNoNames.foreach(arg => if (arg.pos.isRange) typed(arg, mode, ErrorType))
                     duplErrorTree(NotEnoughArgsError(tree, fun, missing))
                   }
                 }
@@ -5207,8 +5209,9 @@ trait Typers extends Adaptations with Tags with TypersTracking with PatternTyper
         def reportError(error: SilentTypeError): Tree = {
           error.reportableErrors.foreach(context.issue)
           error.warnings.foreach { case ContextWarning(p, m, c, s, as) => context.warning(p, m, c, s, as) }
+          // typecheck args to get better / helpful messages (scala/scala#11036), but not synthetic ones (scala/bug#13141)
           args.map { case NamedArg(_, rhs) => rhs case arg => arg }
-            .foreach(typed(_, mode, ErrorType))
+            .foreach(arg => if (arg.pos.isRange) typed(arg, mode, ErrorType))
           setError(tree)
         }
         def advice1(convo: Tree, errors: List[AbsTypeError], err: SilentTypeError): List[AbsTypeError] =
