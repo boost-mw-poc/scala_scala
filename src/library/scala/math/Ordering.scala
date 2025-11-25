@@ -14,8 +14,7 @@ package scala
 package math
 
 import java.util.Comparator
-import scala.annotation.unchecked.uncheckedOverride
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.{implicitConversions, higherKinds}
 
 /** Ordering is a trait whose instances each represent a strategy for sorting
   * instances of a type.
@@ -104,10 +103,10 @@ trait Ordering[T] extends Comparator[T] with PartialOrdering[T] with Serializabl
   override def equiv(x: T, y: T): Boolean = compare(x, y) == 0
 
   /** Return `x` if `x` >= `y`, otherwise `y`. */
-  @uncheckedOverride def max[U <: T](x: U, y: U): U = if (gteq(x, y)) x else y
+  def max(x: T, y: T): T = if (gteq(x, y)) x else y
 
   /** Return `x` if `x` <= `y`, otherwise `y`. */
-  @uncheckedOverride def min[U <: T](x: U, y: U): U = if (lteq(x, y)) x else y
+  def min(x: T, y: T): T = if (lteq(x, y)) x else y
 
   /** Return the opposite ordering of this one. */
   override def reverse: Ordering[T] = new Ordering.Reverse[T](this)
@@ -176,8 +175,8 @@ object Ordering extends LowPriorityOrderingImplicits {
     override def lt(x: T, y: T): Boolean    = outer.lt(y, x)
     override def gt(x: T, y: T): Boolean    = outer.gt(y, x)
     override def equiv(x: T, y: T): Boolean = outer.equiv(y, x)
-    override def max[U <: T](x: U, y: U): U = outer.min(x, y)
-    override def min[U <: T](x: U, y: U): U = outer.max(x, y)
+    override def max(x: T, y: T): T = outer.min(x, y)
+    override def min(x: T, y: T): T = outer.max(x, y)
 
     override def equals(obj: scala.Any): Boolean = obj match {
       case that: AnyRef if this eq that => true
@@ -302,8 +301,8 @@ object Ordering extends LowPriorityOrderingImplicits {
     override def lt(x: Float, y: Float): Boolean = x < y
     override def gt(x: Float, y: Float): Boolean = x > y
     override def equiv(x: Float, y: Float): Boolean = x == y
-    override def max[U <: Float](x: U, y: U): U = math.max(x, y).asInstanceOf[U]
-    override def min[U <: Float](x: U, y: U): U = math.min(x, y).asInstanceOf[U]
+    override def max(x: Float, y: Float): Float = math.max(x, y)
+    override def min(x: Float, y: Float): Float = math.min(x, y)
   }
   implicit object Float extends FloatOrdering
 
@@ -315,8 +314,8 @@ object Ordering extends LowPriorityOrderingImplicits {
     override def lt(x: Double, y: Double): Boolean = x < y
     override def gt(x: Double, y: Double): Boolean = x > y
     override def equiv(x: Double, y: Double): Boolean = x == y
-    override def max[U <: Double](x: U, y: U): U = math.max(x, y).asInstanceOf[U]
-    override def min[U <: Double](x: U, y: U): U = math.min(x, y).asInstanceOf[U]
+    override def max(x: Double, y: Double): Double = math.max(x, y)
+    override def min(x: Double, y: Double): Double = math.min(x, y)
   }
   implicit object Double extends DoubleOrdering
 
