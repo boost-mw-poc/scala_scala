@@ -21,3 +21,8 @@ trait Sub[T] extends Base[T] {
 
   def test = mux()
 }
+
+// this fails to compile on Java 26, see https://github.com/scala/scala/pull/11175#issuecomment-3526694773
+trait OverrideOrdering[T] extends scala.math.Ordering[T] {
+  override def max(x: T, y: T): T = x
+}
