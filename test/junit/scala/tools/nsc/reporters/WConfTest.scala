@@ -329,16 +329,21 @@ class WConfTest extends BytecodeTesting {
     check(v123, v124, ng)
   }
 
-  @Test
-  def sourcePatternTest(): Unit = {
-    def m(p: String) = Reporting.Message.Plain(
-      Position.offset(new BatchSourceFile(new PlainFile(new File(new JFile(p))) {
-        override lazy val canonicalPath: String = p
-      }, Array().toIndexedSeq), 0),
+  def wrapFileInMessage(file: PlainFile) = Reporting.Message.Plain(
+      Position.offset(new BatchSourceFile(file, Array().toIndexedSeq), 0),
       msg = "",
       WarningCategory.Other,
       site = "",
       actions = Nil)
+
+  @Test
+  def sourcePatternTest(): Unit = {
+    def m(p: String) = wrapFileInMessage(new PlainFile(
+      new File(new JFile(p)) {
+        // Avoid invoking getAbsolutePath() on the underlying JFile, as it will
+        // prepend the current working directory to Windows-like paths.
+        override def isAbsolute = true
+      }))
 
     val aTest = Reporting.WConf.parseFilter("src=a/.*Test.scala", rootDir = "").getOrElse(null)
     assertTrue(aTest.matches(m("/a/FooTest.scala")))
@@ -362,5 +367,34 @@ class WConfTest extends BytecodeTesting {
     assertTrue(!withRootDirWin.matches(m("c:/root/path/xa/FooTest.scala")))
     assertTrue(!withRootDirWin.matches(m("c:/root/a/FooTest.scala")))
     assertTrue(!withRootDirWin.matches(m("c:/root/path/b/a/FooTest.scala")))
+  }
+
+  @Test
+  def sourcePatternDoesNotResolveSymlinksTest(): Unit = {
+    def m(symlinkPath: String, actualPath: String) = wrapFileInMessage(
+        new PlainFile(new File(new JFile(symlinkPath))) {
+          // The filter implementation should no longer invoke canonicalPath,
+          // which will resolve symlink paths. See: scala/bug#13145.
+          override lazy val canonicalPath: String = actualPath
+        })
+
+    val externalFiles = Reporting.WConf.parseFilter(
+      "src=external/.*.scala", rootDir = "").getOrElse(null)
+
+    // Use different symlinks to avoid a cache hit in the second assertion.
+    assertTrue(externalFiles.matches(
+      m("external/FileInExternalDir.scala", "/tmp/external/File.scala")))
+    assertTrue(externalFiles.matches(
+      m("external/FileInCacheDir.scala", "/tmp/cache/File.scala")))
+  }
+
+  @Test
+  def sourcePatternMatchesNormalizedPaths(): Unit = {
+    def m(p: String) = wrapFileInMessage(new PlainFile(new File(new JFile(p)) {}))
+
+    val normalizedFiles = Reporting.WConf.parseFilter(
+      "src=foo/baz/.*.scala", rootDir = "").getOrElse(null)
+
+    assertTrue(normalizedFiles.matches(m("foo/./bar/../quux/../baz/File.scala")))
   }
 }

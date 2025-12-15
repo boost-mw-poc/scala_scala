@@ -774,7 +774,8 @@ object Reporting {
       private[this] val cache = mutable.Map.empty[SourceFile, Boolean]
 
       def check(pos: Position) = cache.getOrElseUpdate(pos.source, {
-        val sourcePath = pos.source.file.canonicalPath.replace("\\", "/")
+        val sourceFile = pos.source.file.absolute.file
+        val sourcePath = sourceFile.toPath.normalize.toString.replace("\\", "/")
         pattern.findFirstIn(sourcePath).nonEmpty
       })
       def matches(message: Message): Boolean = check(message.pos)
