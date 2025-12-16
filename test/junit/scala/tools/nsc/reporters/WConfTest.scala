@@ -20,9 +20,11 @@ import java.io.{File => JFile}
 import scala.collection.mutable.ListBuffer
 import scala.reflect.internal.util.{BatchSourceFile, Position}
 import scala.reflect.internal.{Reporter => InternalReporter}
-import scala.reflect.io.PlainFile
-import scala.tools.nsc.Reporting.{Version, WarningCategory}
+import scala.reflect.io.AbstractFile
 import scala.reflect.io.File
+import scala.reflect.io.PlainFile
+import scala.reflect.io.VirtualFile
+import scala.tools.nsc.Reporting.{Version, WarningCategory}
 import scala.tools.nsc.reporters.StoreReporter.Info
 import scala.tools.testkit.AssertUtil.fail
 import scala.tools.testkit.BytecodeTesting
@@ -329,7 +331,7 @@ class WConfTest extends BytecodeTesting {
     check(v123, v124, ng)
   }
 
-  def wrapFileInMessage(file: PlainFile) = Reporting.Message.Plain(
+  def wrapFileInMessage(file: AbstractFile) = Reporting.Message.Plain(
       Position.offset(new BatchSourceFile(file, Array().toIndexedSeq), 0),
       msg = "",
       WarningCategory.Other,
@@ -396,5 +398,18 @@ class WConfTest extends BytecodeTesting {
       "src=foo/baz/.*.scala", rootDir = "").getOrElse(null)
 
     assertTrue(normalizedFiles.matches(m("foo/./bar/../quux/../baz/File.scala")))
+  }
+
+  @Test
+  def sourcePatternMatchesVirtualFiles(): Unit = {
+    def m(p: String) = wrapFileInMessage(new VirtualFile(p))
+
+    val virtualFiles = Reporting.WConf.parseFilter(
+      "src=virtual/.*.scala", rootDir = "").getOrElse(null)
+
+    // Make sure the VirtualFile path starts with "/", otherwise the
+    // "src=virtual/.*" pattern will not match it. This is because the `src`
+    // parser prepends "/" to the regex to ensure it matches a path segment.
+    assertTrue(virtualFiles.matches(m("/virtual/File.scala")))
   }
 }
