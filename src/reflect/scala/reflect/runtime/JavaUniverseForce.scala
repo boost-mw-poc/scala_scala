@@ -428,6 +428,7 @@ trait JavaUniverseForce { self: runtime.JavaUniverse  =>
     definitions.Object_asInstanceOf
     definitions.Object_synchronized
     definitions.String_$plus
+    definitions.ObjectsClass
     definitions.ObjectRefClass
     definitions.VolatileObjectRefClass
     definitions.RuntimeStaticsModule
