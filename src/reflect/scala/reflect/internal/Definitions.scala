@@ -1286,6 +1286,9 @@ trait Definitions extends api.StandardDefinitions {
     def Object_hashCode  = getMemberMethod(ObjectClass, nme.hashCode_)
     def Object_toString  = getMemberMethod(ObjectClass, nme.toString_)
 
+    lazy val ObjectsClass = getRequiredModule("java.util.Objects").moduleClass
+    def Objects_hashCode = getMemberMethod(ObjectsClass, nme.hashCode_)
+
     // boxed classes
     lazy val ObjectRefClass         = requiredClass[scala.runtime.ObjectRef[_]]
     lazy val VolatileObjectRefClass = requiredClass[scala.runtime.VolatileObjectRef[_]]
