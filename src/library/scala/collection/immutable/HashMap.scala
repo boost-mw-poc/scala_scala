@@ -800,7 +800,7 @@ private final class BitmapIndexedMapNode[K, +V](
       val key0UnimprovedHash = getHash(index)
       if (key0UnimprovedHash == originalHash && key0 == key) {
         val value0 = this.getValue(index)
-        if (!((key0.asInstanceOf[AnyRef] eq key.asInstanceOf[AnyRef]) && (value0.asInstanceOf[AnyRef] eq value.asInstanceOf[AnyRef]))) {
+        if ((key0.asInstanceOf[AnyRef] ne key.asInstanceOf[AnyRef]) || (value0.asInstanceOf[AnyRef] ne value.asInstanceOf[AnyRef])) {
           val dataIx = dataIndex(bitpos)
           val idx = TupleLength * dataIx
           content(idx + 1) = value

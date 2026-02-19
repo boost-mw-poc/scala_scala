@@ -5236,7 +5236,7 @@ trait Types
     case _                      => false
   }
   def isBoundedGeneric(tp: Type) = tp match {
-    case TypeRef(_, sym, _) if sym.isAbstractType => tp <:< AnyRefTpe && !(tp.upperBound eq ObjectTpeJava)
+    case TypeRef(_, sym, _) if sym.isAbstractType => tp <:< AnyRefTpe && (tp.upperBound ne ObjectTpeJava)
     case TypeRef(_, sym, _)                       => !isPrimitiveValueClass(sym)
     case _                                        => false
   }
