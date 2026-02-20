@@ -72,8 +72,6 @@ class HtmlFactory(val universe: doc.Universe, val reporter: Reporter) {
     "MaterialIcons-Regular.woff",
 
     "index.js",
-    "jquery.mousewheel.min.js",
-    "jquery.panzoom.min.js",
     "scheduler.js",
     "diagrams.js",
     "template.js",
@@ -95,7 +93,8 @@ class HtmlFactory(val universe: doc.Universe, val reporter: Reporter) {
   )
 
   final def webjarResources = List(
-    ("jquery.min.js", "OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao=")
+    ("jquery.min.js", "OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao="),
+    ("panzoom.min.js", "9PI4Hcqdhk6UDuIArOUvzRL9S/uJRmDpkA2o4gIigDs=")
   )
 
   /** Generates the Scaladoc site for a model into the site root.

@@ -59,8 +59,7 @@ trait EntityPage extends HtmlPage {
       <link href={ relativeLinkTo{List("template.css", "lib")} } media="screen" type="text/css" rel="stylesheet"/>
       <link href={ relativeLinkTo{List("diagrams.css", "lib")} } media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
       <script type="text/javascript" src={ relativeLinkTo{List("jquery.min.js", "lib")} }></script>
-      <script type="text/javascript" src={ relativeLinkTo{List("jquery.panzoom.min.js", "lib")} }></script>
-      <script type="text/javascript" src={ relativeLinkTo{List("jquery.mousewheel.min.js", "lib")} }></script>
+      <script type="text/javascript" src={ relativeLinkTo{List("panzoom.min.js", "lib")} }></script>
       <script type="text/javascript" src={ relativeLinkTo{List("index.js", "lib")} }></script>
       <script type="text/javascript" src={ relativeLinkTo{List("index.js")} }></script>
       <script type="text/javascript" src={ relativeLinkTo{List("scheduler.js", "lib")} }></script>
