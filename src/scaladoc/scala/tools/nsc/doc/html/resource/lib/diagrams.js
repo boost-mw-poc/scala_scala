@@ -43,8 +43,11 @@ $(document).ready(function()
 		diagrams.toggle($("#content-diagram-container"), true);
 	}
 
-	$(".diagram-link").click(function() {
-		diagrams.toggle($(this).parent());
+	$(".diagram-container").click(function(e) {
+		var $target = $(e.target);
+		if ($target.closest('.diagram, #diagram-controls').length === 0) {
+			diagrams.toggle($(this));
+		}
 	});
 
 	// register resize function
