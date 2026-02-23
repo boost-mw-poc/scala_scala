@@ -43,8 +43,11 @@ $(document).ready(function()
 		diagrams.toggle($("#content-diagram-container"), true);
 	}
 
-	$(".diagram-link").click(function() {
-		diagrams.toggle($(this).parent());
+	$(".diagram-container").click(function(e) {
+		var $target = $(e.target);
+		if ($target.closest('.diagram, #diagram-controls').length === 0) {
+			diagrams.toggle($(this));
+		}
 	});
 
 	// register resize function
@@ -65,7 +68,9 @@ $(document).ready(function()
             height: $("svg").height() + "pt"
         });
 
-        $panzoom.panzoom("reset", { animate: false, contain: false });
+        if (typeof panzoomInstance !== 'undefined' && panzoomInstance) {
+            panzoomInstance.reset();
+        }
     });
 });
 
@@ -193,7 +198,7 @@ diagrams.toggle = function(container, dontAnimate)
         div.slideUp(100);
 
         $("#diagram-controls", container).hide();
-        $("#inheritance-diagram-container").unbind('mousewheel.focal');
+        $("#inheritance-diagram-container").off('wheel.focal');
     } else {
         diagrams.resize();
         if(dontAnimate)
@@ -204,15 +209,11 @@ diagrams.toggle = function(container, dontAnimate)
 
         $("#diagram-controls", container).show();
 
-        $(".diagram-container").on('mousewheel.focal', function(e) {
+        $(".diagram-container").on('wheel.focal', function(e) {
             e.preventDefault();
-            var delta = e.delta || e.originalEvent.wheelDelta;
-            var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
-            $panzoom.panzoom('zoom', zoomOut, {
-                increment: 0.1,
-                animate: true,
-                focal: e
-            });
+            if (typeof panzoomInstance !== 'undefined' && panzoomInstance) {
+                panzoomInstance.zoomWithWheel(e.originalEvent);
+            }
         });
     }
 };

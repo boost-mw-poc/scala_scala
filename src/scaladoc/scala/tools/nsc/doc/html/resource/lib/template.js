@@ -1,20 +1,30 @@
 // © 2009–2010 EPFL/LAMP
 // code by Gilles Dubochet with contributions by Pedro Furlanetto, Marcin Kubala and Felix Mulder
 
-var $panzoom = undefined;
+var panzoomInstance = undefined;
 $(document).ready(function() {
     // Add zoom functionality to type inheritance diagram
-    $panzoom = $(".diagram-container > .diagram").panzoom({
-        increment: 0.1,
-        minScale: 1,
-        maxScale: 7,
-        transition: true,
-        duration: 200,
-        contain: 'invert',
-        easing: "ease-in-out",
-        $zoomIn: $('#diagram-zoom-in'),
-        $zoomOut: $('#diagram-zoom-out'),
-    });
+    var diagramElem = $(".diagram-container > .diagram")[0];
+    if (diagramElem && typeof Panzoom !== 'undefined') {
+        panzoomInstance = Panzoom(diagramElem, {
+            step: 0.1,
+            minScale: 1,
+            maxScale: 7,
+            duration: 200,
+            contain: 'invert',
+            easing: "ease-in-out"
+        });
+        
+        // Wire up zoom buttons
+        $('#diagram-zoom-in').on('click', function(e) {
+            e.preventDefault();
+            panzoomInstance.zoomIn();
+        });
+        $('#diagram-zoom-out').on('click', function(e) {
+            e.preventDefault();
+            panzoomInstance.zoomOut();
+        });
+    }
 
     var oldWidth = $("div#subpackage-spacer").width() + 1 + "px";
     $("div#packages > ul > li.current").on("click", function() {
@@ -447,7 +457,8 @@ function initInherit() {
 
 /* filter used to take boolean scrollToMember */
 function filter() {
-    var query = $.trim($("#memberfilter input").val()).toLowerCase();
+    var inputVal = $("#memberfilter input").val();
+    var query = (inputVal || "").trim().toLowerCase();
     query = query.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&").replace(/\s+/g, "|");
     var queryRegExp = new RegExp(query, "i");
     var privateMembersHidden = $("#visbl > ol > li.public").hasClass("in");

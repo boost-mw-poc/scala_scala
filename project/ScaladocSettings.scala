@@ -7,12 +7,13 @@ object ScaladocSettings {
 
   // when this changes, the integrity check in HtmlFactory.scala also needs updating
   val webjarResources = Seq(
-    "org.webjars" % "jquery" % "3.7.1"
+    "org.webjars" % "jquery" % "4.0.0",
+    "org.webjars.npm" % "panzoom__panzoom" % "4.5.1"
   )
 
   def extractResourcesFromWebjar = Def.task {
     def isWebjar(s: Attributed[File]): Boolean =
-      s.get(artifact.key).isDefined && s.get(moduleID.key).exists(_.organization == "org.webjars")
+      s.get(artifact.key).isDefined && s.get(moduleID.key).exists(mid => mid.organization == "org.webjars" || mid.organization == "org.webjars.npm")
     val dest = (resourceManaged.value / "webjars").getAbsoluteFile
     IO.createDirectory(dest)
     val classpaths = (Compile / dependencyClasspath).value
