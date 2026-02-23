@@ -102,7 +102,7 @@ Use partest for compiler work, JUnit/ScalaCheck for library work.
 ### Creating Check Files
 
 In sbt:
-  - `partest --update-check test/files/neg/my-test.scala`
+- `partest --update-check test/files/neg/my-test.scala`
 
 ## Code Standards
 
@@ -125,27 +125,6 @@ In sbt:
 - Every commit must pass CI (for `git bisect`)
 - Amend and force-push for review feedback
 - Keep history clean and linear
-
-## TASTy Reader
-
-The TASTy reader enables Scala 2.13.x to consume Scala 3 compiled dependencies.
-
-### Compiler Flags
-- `-Ytasty-reader`: Enable TASTy support
-- `-Ydebug-tasty`: Rich debug output
-- `-Ytasty-no-annotations`: Ignore annotations (use cautiously)
-
-### Development Workflow
-1. Compile Scala 3 source: `dotc -d $out $src3`
-2. Compile Scala 2 source using Scala 3 classes: `scalac -Ytasty-reader -d $out -cp $out $src2`
-3. Debug with: `scalac -Ydebug-tasty -cp $out $src2`
-
-### Testing
-From sbt: `tasty/test`
-- `run/`: Runtime tests depending on Scala 3 classes
-- `pos/`: Compilation tests
-- `neg/`: Expected compilation failures
-- `neg-isolated/`: Missing transitive dependency tests
 
 ## Benchmarking
 
@@ -197,12 +176,3 @@ bench/Jmh/runMain scala.collection.mutable.OpenHashMapRunner
 - ❌ Breaking binary compatibility without careful review
 - ❌ Changing type inference without team discussion
 - ❌ Not running partest for compiler changes
-
-## Spec Development
-
-Location: `spec/`
-Format: Markdown with Jekyll + Redcarpet
-Preview: `bundle exec jekyll serve -d build/spec/ -s spec/ -w --baseurl=""`
-Published: https://www.scala-lang.org/files/archive/spec/2.13/
-
-All files UTF-8, use Unicode characters directly (é not `\'e`).
