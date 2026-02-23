@@ -6,7 +6,7 @@ scalacOptions ++= Seq(
   "-Werror",
   "-Wconf:msg=IntegrationTest .* is deprecated:s,msg=itSettings .* is deprecated:s")
 
-libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.19.0"
+libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.20.0"
 
 libraryDependencies += "biz.aQute.bnd" % "biz.aQute.bndlib" % "6.1.0"
 
@@ -26,4 +26,4 @@ addSbtPlugin("com.github.sbt" % "sbt-header" % "5.11.0")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.8")
 
-addSbtPlugin("com.gradle" % "sbt-develocity" % "1.4.1")
+addSbtPlugin("com.gradle" % "sbt-develocity" % "1.4.5")

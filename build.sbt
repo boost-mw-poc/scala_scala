@@ -157,6 +157,7 @@ lazy val instanceSettings = Seq[Setting[_]](
       s2
     }
   },
+  Compile / doc / scalaInstance := scalaInstance.value,
   // sbt endeavours to align both scalaOrganization and scalaVersion
   // in the Scala artefacts, for example scala-library and scala-compiler.
   // This doesn't work in the scala/scala build because the version of scala-library and the scalaVersion of
