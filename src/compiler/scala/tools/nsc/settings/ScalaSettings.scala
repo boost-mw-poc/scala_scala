@@ -153,7 +153,6 @@ trait ScalaSettings extends StandardScalaSettings with Warnings { _: MutableSett
          |Scala 3 semantics, see `-Xsource-features:help`.
          |${sourceFeatures.values.toList.collect { case c: sourceFeatures.Choice if c.expandsTo.isEmpty => c.help }.map(h => s"  * $h").mkString("\n")}
          |"""
-  @nowarn("cat=deprecation")
   val source = ScalaVersionSetting ("-Xsource", "version", "Enable warnings and features for a future version.", initial = ScalaVersion("2.13"), helpText = Some(XsourceHelp)).withPostSetHook { s =>
     if (s.value.unparse == "3.0.0-cross")
       XsourceFeatures.tryToSet(List("_"))

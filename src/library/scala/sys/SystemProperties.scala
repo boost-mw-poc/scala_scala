@@ -51,7 +51,6 @@ extends mutable.AbstractMap[String, String] {
   def subtractOne (key: String): this.type = { wrapAccess(System.clearProperty(key)) ; this }
   def addOne (kv: (String, String)): this.type = { wrapAccess(System.setProperty(kv._1, kv._2)) ; this }
 
-  @annotation.nowarn("cat=deprecation") // AccessControlException is deprecated on JDK 17
   def wrapAccess[T](body: => T): Option[T] =
     try Some(body) catch { case _: SecurityException => None }
 }
