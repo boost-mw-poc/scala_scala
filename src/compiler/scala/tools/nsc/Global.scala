@@ -1466,7 +1466,6 @@ class Global(var currentSettings: Settings, reporter0: Reporter)
 
     private def showMembers() = {
       // Allows for syntax like scalac -Xshow-class Random@erasure,typer
-      @nowarn
       def splitClassAndPhase(str: String, term: Boolean): Name = {
         def mkName(s: String) = if (term) newTermName(s) else newTypeName(s)
         (str indexOf '@') match {
