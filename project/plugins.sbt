@@ -10,7 +10,7 @@ libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.20.0"
 
 libraryDependencies += "biz.aQute.bnd" % "biz.aQute.bndlib" % "6.1.0"
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.4")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.5")
 
 libraryDependencies ++= Seq(
   "org.eclipse.jgit" % "org.eclipse.jgit" % "4.11.9.201909030838-r",
@@ -25,5 +25,3 @@ Global / concurrentRestrictions := Seq(
 addSbtPlugin("com.github.sbt" % "sbt-header" % "5.11.0")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.8")
-
-addSbtPlugin("com.gradle" % "sbt-develocity" % "1.4.5")
