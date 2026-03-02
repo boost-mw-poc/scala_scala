@@ -28,5 +28,3 @@ concurrentRestrictions in Global := Seq(
 addSbtPlugin("com.github.sbt" % "sbt-header" % "5.11.0")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.8")
-
-addSbtPlugin("com.gradle" % "sbt-develocity" % "1.4.5")
