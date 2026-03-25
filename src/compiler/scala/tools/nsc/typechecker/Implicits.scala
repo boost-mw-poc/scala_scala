@@ -132,12 +132,10 @@ trait Implicits extends splain.SplainData {
     if (settings.areStatisticsEnabled) statistics.stopCounter(subtypeImpl, subtypeStart)
 
     if (result.isSuccess) {
-      val rts = {
-        val infoSym = if (result.implicitInfo != null) result.implicitInfo.sym else NoSymbol
-        infoSym.orElse {
-          val rts0 = result.tree.symbol
-          if (rts0 != null) rts0 else NoSymbol
-        }
+      val infoSym = if (result.implicitInfo != null) result.implicitInfo.sym else NoSymbol
+      val rts = infoSym.orElse {
+        val rts0 = result.tree.symbol
+        if (rts0 != null) rts0 else NoSymbol
       }
       if (settings.lintImplicitRecursion) {
         val target =
@@ -186,6 +184,11 @@ trait Implicits extends splain.SplainData {
             if (doWarn)
               context.warning(result.tree.pos, s"Implicit resolves to enclosing $encl$help", WFlagSelfImplicit)
           }
+      }
+      if (infoSym.exists && infoSym.owner.isModuleClass) {
+        val companion = companionSymbolOf(infoSym.owner, context)
+        if (companion.exists && !context.isAccessible(companion, result.implicitInfo.pre.prefix))
+          context.deprecationWarning(result.tree.pos, infoSym, s"Usage of implicit $infoSym defined in $companion, which is not accessible here. In Scala 2.13.20, this implicit will no longer be found.", "2.13.19")
       }
       if (result.inPackagePrefix && currentRun.isScala3) {
         val msg =
