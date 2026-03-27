@@ -217,6 +217,9 @@ Our guidelines for contributing are explained in [CONTRIBUTING.md](CONTRIBUTING.
 It contains useful information on our coding standards, testing, documentation, how
 we use git and GitHub and how to get your code reviewed.
 
+Refer to our [LLM policy](LLM_POLICY.md) for rules and guidelines regarding the use
+of LLM-based tools in your contributions.
+
 You may also want to check out the following resources:
   - The ["Scala Hacker Guide"](https://scala-lang.org/contribute/hacker-guide.html)
     covers some of the same ground as this README, but in greater detail and in a more

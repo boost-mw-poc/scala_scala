@@ -2,7 +2,10 @@
 
 We follow the standard GitHub [fork & pull](https://help.github.com/articles/using-pull-requests/#fork--pull) approach to pull requests. Just fork the official repo, develop in a branch, and submit a PR!
 
-You're always welcome to submit your PR straight away and start the discussion (without reading the rest of this wonderful doc, or the [`README.md`](README.md)). The goal of these notes is to make your experience contributing to Scala as smooth and pleasant as possible. We're happy to guide you through the process once you've submitted your PR.
+You're always welcome to submit your PR straight away and start the discussion (without reading the rest of this wonderful doc, or the [`README.md`](README.md)).
+But take into account our [LLM policy](LLM_POLICY.md) for rules and guidelines regarding the use  of LLM-based tools in your contributions.
+The goal of these notes is to make your experience contributing to Scala as smooth and pleasant as possible.
+We're happy to guide you through the process once you've submitted your PR.
 
 ## What kind of PR are you submitting?
 
