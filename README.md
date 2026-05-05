@@ -13,7 +13,7 @@ For coordinating broader efforts, we also use the [scala/scala-dev tracker](http
 
 To contribute here, please open a [pull request](https://help.github.com/articles/using-pull-requests/#fork--pull) from your fork of this repository.
 
-Be aware that we can't accept additions to the standard library, only modifications to existing code.  Binary compatibility forbids adding new public classes or public methods. Additions are made to [scala-library-next](https://github.com/scala/scala-library-next) instead.
+If your change affects the standard library, see CONTRIBUTING.md for remarks about what sort of changes might be accepted in Scala 2 and/or Scala 3.
 
 We require that you sign the [Scala CLA](https://contribute.akka.io/contribute/cla/scala) before we can merge any of your work, to protect Scala's future as open source software.
 
