@@ -1289,22 +1289,40 @@ final class ArrayOps[A](private val xs: Array[A]) extends AnyVal {
     (a1, a2, a3)
   }
 
-  /** Transposes a two dimensional array.
+  /** Transposes a two-dimensional array.
+    *
+    * Note: this method has known issues related to the handling of empty arrays. It will return an
+    * incorrectly typed empty array of runtime type `Array[A]` if it is called on an empty array,
+    * and if not handled with care may result in a [[java.lang.ClassCastException `ClassCastException`]].
+    * See [[https://github.com/scala/bug/issues/13178 scala/bug#13178]] for discussion.
+    *
+    * As a workaround, either convert to an iterable and use [[scala.collection.IterableOps!.transpose `IterableOps.transpose`]] instead,
+    * or call [[scala.collection.ArrayOps!.map `ArrayOps.map`]] beforehand instead of passing `asArray`.
     *
     *  @tparam B       Type of row elements.
-    *  @param asArray  A function that converts elements of this array to rows - arrays of type `B`.
-    *  @return         An array obtained by replacing elements of this arrays with rows the represent.
+    *  @param asArray  A function that converts elements of this array to rows — arrays of type `B`.
+    *  @return         An array obtained by replacing the elements of this array with the rows they represent and then transposing them.
     */
   def transpose[B](implicit asArray: A => Array[B]): Array[Array[B]] = {
-    val aClass = xs.getClass.getComponentType
-    val bb = new ArrayBuilder.ofRef[Array[B]]()(ClassTag[Array[B]](aClass))
-    if (xs.length == 0) bb.result()
-    else {
-      def mkRowBuilder() = ArrayBuilder.make[B](using ClassTag[B](aClass.getComponentType))
-      val bs = new ArrayOps(asArray(xs(0))).map((x: B) => mkRowBuilder())
+    if (xs.length == 0) {
+      val aClass = xs.getClass.getComponentType
+      val bb = ArrayBuilder.make(using ClassTag[A](aClass))
+      bb.result().asInstanceOf[Array[Array[B]]] // cast may be invalid, see Scaladoc
+    } else {
+      val first = asArray(xs(0))
+      val bb = new ArrayBuilder.ofRef[Array[B]]()(ClassTag[Array[B]](first.getClass))
+      def mkRowBuilder() = ArrayBuilder.make[B](using ClassTag[B](first.getClass.getComponentType))
+      val bs = new ArrayOps(first).map((x: B) => mkRowBuilder())
+      var isFirst = true
       for (xs <- this) {
         var i = 0
-        for (x <- new ArrayOps(asArray(xs))) {
+        // prevent double-evaluation for backwards compatibility
+        val subArray = if (isFirst) {
+          isFirst = false
+          first
+        } else asArray(xs)
+
+        for (x <- new ArrayOps(subArray)) {
           bs(i) += x
           i += 1
         }
