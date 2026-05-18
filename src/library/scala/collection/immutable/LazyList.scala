@@ -16,10 +16,9 @@ package immutable
 
 import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.lang.{StringBuilder => JStringBuilder}
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater
 import scala.annotation.tailrec
 import scala.collection.generic.SerializeEnd
+import scala.collection.immutable.LazyListBase.InRace
 import scala.collection.mutable.{Builder, ReusableBuilder, StringBuilder}
 import scala.language.implicitConversions
 import scala.runtime.Statics
@@ -265,7 +264,7 @@ import scala.runtime.Statics
   */
 @SerialVersionUID(4L)
 final class LazyList[+A] private (lazyState: AnyRef /* EmptyMarker.type | () => LazyList[A] */)
-  extends AbstractSeq[A]
+  extends LazyListBase[A](if (lazyState eq LazyList.EmptyMarker) null else lazyState)
     with LinearSeq[A]
     with LinearSeqOps[A, LazyList, LazyList[A]]
     with IterableFactoryDefaults[A, LazyList]
@@ -277,32 +276,27 @@ final class LazyList[+A] private (lazyState: AnyRef /* EmptyMarker.type | () => 
   private def this(head: A, tail: LazyList[A]) = {
     this(LazyList.EmptyMarker)
     _head = head
-    _tail = tail
+    setRawTail(tail)
   }
 
-  // used to synchronize lazy state evaluation
-  // after initialization (`_head ne Uninitialized`)
+  // `_head` and `_tail` are used to synchronize lazy state evaluation.
+  //
+  // initially, `_head` is `Uninitialized`. after initialization, `_head` holds:
   //   - `null` if this is an empty lazy list
-  //   - `head: A` otherwise (can be `null`, `_tail == null` is used to test emptiness)
+  //   - `head: A` otherwise (can be the `null` value, `_tail == null` is used to test emptiness)
+  //
+  // `_tail` (declared in `LazyListBase`) can hold the following values:
+  //   - when `_head eq Uninitialized`
+  //     - `lazyState: () => LazyList[A]`
+  //     - while evaluating `lazyState`: the evaluating `Thread`
+  //     - if multiple threads attempt initialization: an `InRace` instance
+  //   - when `_head ne Uninitialized`
+  //     - `null` if this is an empty lazy list
+  //     - `tail: LazyList[A]` otherwise
   @volatile private var _head: Any /* Uninitialized | A */ =
     if (lazyState eq EmptyMarker) null else Uninitialized
 
-  // when `_head eq Uninitialized`
-  //   - `lazyState: () => LazyList[A]`
-  //   - while evaluating `lazyState`: the evaluating `Thread`
-  //   - if multiple threads attempt initialization: an `InRace` instance
-  // when `_head ne Uninitialized`
-  //   - `null` if this is an empty lazy list
-  //   - `tail: LazyList[A]` otherwise
-  @volatile private var _tail: AnyRef /* () => LazyList[A] | Thread | InRace | LazyList[A] */ =
-    if (lazyState eq EmptyMarker) null else lazyState
-
   private def rawHead: Any = _head
-  private def rawTail: AnyRef = _tail
-
-  // `newUpdater` needs to be invoked in the `LazyList` class, it uses the caller class to check field access
-  @noinline private def makeTailUpdater: AtomicReferenceFieldUpdater[LazyList[_], AnyRef] =
-    AtomicReferenceFieldUpdater.newUpdater(classOf[LazyList[_]], classOf[AnyRef], "_tail")
 
   @inline private def isEvaluated: Boolean = _head.asInstanceOf[AnyRef] ne Uninitialized
 
@@ -313,17 +307,16 @@ final class LazyList[+A] private (lazyState: AnyRef /* EmptyMarker.type | () => 
         "LazyList evaluation depends on its own result (self-reference); see docs for more info")
 
     while (!isEvaluated) {
-      _tail match {
-        case t: Thread if t eq Thread.currentThread => selfRef()
-        case ir: InRace if ir.owner eq Thread.currentThread => selfRef()
-
+      rawTail match {
         case t: Thread =>
-          val ir = new InRace(t)
+          if (LazyListBase.isCurrentThread(t)) selfRef()
+          val ir = InRace(t)
           if (_tailUpdater.compareAndSet(this, t, ir))
             ir.await()
           // loop on lost CAS
 
         case ir: InRace =>
+          if (LazyListBase.isCurrentThread(ir.owner)) selfRef()
           ir.await()
 
         case fun: Function0[_] =>
@@ -362,7 +355,7 @@ final class LazyList[+A] private (lazyState: AnyRef /* EmptyMarker.type | () => 
 
   @tailrec private def evaluated: LazyList[A] =
     if (isEvaluated) {
-      if (_tail == null) Empty
+      if (rawTail == null) Empty
       else this
     } else {
       initState()
@@ -1088,19 +1081,7 @@ object LazyList extends SeqFactory[LazyList] {
 
   private val Empty: LazyList[Nothing] = new LazyList(EmptyMarker)
 
-  private final class InRace(val owner: Thread) {
-    private val done: CountDownLatch = new CountDownLatch(1)
-    def await(): Unit = {
-      var interrupted = false
-      while (done.getCount > 0) {
-        try done.await() catch { case _: InterruptedException => interrupted = true }
-      }
-      if (interrupted) Thread.currentThread().interrupt()
-    }
-    def countDown(): Unit = done.countDown()
-  }
-
-  private val _tailUpdater: AtomicReferenceFieldUpdater[LazyList[_], AnyRef] = Empty.makeTailUpdater
+  private val _tailUpdater: LazyListBase.TailUpdater = Empty.makeTailUpdater
 
   /** Creates a new LazyList. */
   @inline private def newLL[A](state: => LazyList[A]): LazyList[A] = new LazyList[A](() => state)
