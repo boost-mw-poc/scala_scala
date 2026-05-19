@@ -50,6 +50,13 @@ object MimaFilters extends AutoPlugin {
     ProblemFilters.exclude[DirectMissingMethodProblem]("scala.runtime.ArrayCharSequence.getChars"),
     ProblemFilters.exclude[DirectMissingMethodProblem]("scala.runtime.SeqCharSequence.getChars"),
 
+    // scala/scala#11242
+    ProblemFilters.exclude[MissingClassProblem]("scala.collection.immutable.LazyList$MidEvaluation$"),
+    ProblemFilters.exclude[MissingClassProblem]("scala.collection.immutable.LazyList$InRace"),
+
+    // scala/scala#11242
+    ProblemFilters.exclude[MissingTypesProblem]("scala.collection.immutable.LazyList"), // superclass change from AbstractSeq to LazyListBase
+    ProblemFilters.exclude[MissingClassProblem]("scala.collection.immutable.LazyListBase*"), // private[immutable]
   )
 
   override val buildSettings = Seq(
