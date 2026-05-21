@@ -50,11 +50,7 @@ private[immutable] object LazyListBase {
     // Implements a one-time latch
     final private class Sync extends AbstractQueuedSynchronizer {
       override def tryAcquireShared(unused: Int): Int = if (getState == 0) -1 else 1
-
-      override def tryReleaseShared(unused: Int): Boolean = {
-        setState(1)
-        true
-      }
+      override def tryReleaseShared(unused: Int): Boolean = getState == 0 && compareAndSetState(0, 1)
     }
 
     private val sync = new Sync()
