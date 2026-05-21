@@ -12,8 +12,8 @@
 
 package scala.collection.immutable
 
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 /**
  * Base class for [[LazyList]] to split out code that uses concurrency utilities that are not available
@@ -47,18 +47,19 @@ private[immutable] object LazyListBase {
   def InRace(t: Thread) = new InRace(t)
 
   final class InRace private[LazyListBase] (val owner: Thread) {
-    private val done: CountDownLatch = new CountDownLatch(1)
+    // Implements a one-time latch
+    final private class Sync extends AbstractQueuedSynchronizer {
+      override def tryAcquireShared(unused: Int): Int = if (getState == 0) -1 else 1
 
-    def await(): Unit = {
-      var interrupted = false
-      while (done.getCount > 0) {
-        try done.await() catch {
-          case _: InterruptedException => interrupted = true
-        }
+      override def tryReleaseShared(unused: Int): Boolean = {
+        setState(1)
+        true
       }
-      if (interrupted) Thread.currentThread().interrupt()
     }
 
-    def countDown(): Unit = done.countDown()
+    private val sync = new Sync()
+
+    def await(): Unit = sync.acquireShared(0)
+    def countDown(): Unit = sync.releaseShared(0)
   }
 }
